@@ -2,26 +2,19 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
+	"todo/internal/task"
 )
 
-var (
-	ids      = []int{1, 2, 3, 4, 5}
-	titles   = []string{"сделать отчет", "посмотреть урок", "решить задачу", "проверить Pull Request", "прочитать главу книги"}
-	statuses = []string{"новая", "в работе", "завершена", "новая", "в работе"}
-)
-
-var (
-	ErrEmptyTitle    = errors.New("название не может быть пустым")
-	ErrTitleTooLong  = errors.New("название слишком длинное")
-	ErrInvalidStatus = errors.New("недопустимый статус")
-)
+var tasks []*task.Task
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
+	t1, _ := task.NewTask("Купить хлеб", "Описание")
+	t2, _ := task.NewTask("Сделать ДЗ", "Описание ДЗ")
+	tasks = append(tasks, t1, t2)
 
 menu:
 	for {
@@ -48,12 +41,7 @@ menu:
 				break menu
 			}
 			status := scanner.Text()
-
-			if IsValidStatus(status) {
-				PrintByStatus(status)
-			} else {
-				fmt.Println("Неверный статус. Допустимые: новая, в работе, завершена")
-			}
+			PrintByStatus(status)
 
 		case "3":
 			fmt.Println("Выход")
@@ -71,19 +59,6 @@ menu:
 	}
 }
 
-func ValidateTask(title, status string) error {
-	if title == "" {
-		return fmt.Errorf("валидация не пройдена: %w", ErrEmptyTitle)
-	}
-	if len(title) > 100 {
-		return fmt.Errorf("валидация не пройдена: %w", ErrTitleTooLong)
-	}
-	if !IsValidStatus(status) {
-		return fmt.Errorf("валидация не пройдена: %w", ErrInvalidStatus)
-	}
-	return nil
-}
-
 func AddTask(scanner *bufio.Scanner) {
 	for {
 		fmt.Print("Введите название: ")
@@ -92,34 +67,19 @@ func AddTask(scanner *bufio.Scanner) {
 		}
 		title := scanner.Text()
 
-		fmt.Print("Введите статус: ")
+		fmt.Print("Введите описание: ")
 		if !scanner.Scan() {
 			return
 		}
-		status := scanner.Text()
+		description := scanner.Text()
 
-		err := ValidateTask(title, status)
-
-		if errors.Is(err, ErrEmptyTitle) {
-			fmt.Println("Ошибка: название пустое. Введите заново")
-			continue
-		}
-		if errors.Is(err, ErrTitleTooLong) {
-			fmt.Println("Ошибка: название слишком длинное")
-			continue
-		}
-		if errors.Is(err, ErrInvalidStatus) {
-			fmt.Println("Ошибка: недопустимый статус")
-			continue
-		}
+		newTask, err := task.NewTask(title, description)
 		if err != nil {
-			fmt.Println("Неизвестная ошибка:", err)
+			fmt.Println("Ошибка:", err)
 			continue
 		}
 
-		ids = append(ids, len(ids)+1)
-		titles = append(titles, title)
-		statuses = append(statuses, status)
+		tasks = append(tasks, newTask)
 		fmt.Println("Задача успешно добавлена!")
 		break
 	}
@@ -144,15 +104,17 @@ func ChangeStatus(scanner *bufio.Scanner) {
 	}
 	newStatus := scanner.Text()
 
-	if !IsValidStatus(newStatus) {
-		fmt.Println("Ошибка: недопустимый статус")
+	if newStatus != "new" && newStatus != "in_progress" && newStatus != "done" {
+		fmt.Println("Ошибка: недопустимый статус. Допустимые: new, in_progress, done")
 		return
 	}
 
 	found := false
-	for i := 0; i < len(ids); i++ {
-		if ids[i] == id {
-			statuses[i] = newStatus
+
+	for _, t := range tasks {
+		if t.ID() == id {
+
+			t.SetStatus(task.Status(newStatus))
 			fmt.Println("Статус задачи успешно обновлен!")
 			found = true
 			break
@@ -165,24 +127,17 @@ func ChangeStatus(scanner *bufio.Scanner) {
 }
 
 func PrintAll() {
-	for i := 0; i < len(ids); i++ {
-		fmt.Printf("ID: %-4d | название: %-25s | статус: %s\n", ids[i], titles[i], statuses[i])
+	for _, t := range tasks {
+		fmt.Println(t)
 	}
+
 }
 
 func PrintByStatus(status string) {
-	for i := 0; i < len(ids); i++ {
-		if statuses[i] != status {
+	for _, t := range tasks {
+		if string(t.Status()) != status {
 			continue
 		}
-		fmt.Printf("ID: %-4d | название: %-25s | статус: %s\n", ids[i], titles[i], statuses[i])
+		fmt.Println(t)
 	}
-}
-
-func IsValidStatus(s string) bool {
-	switch s {
-	case "новая", "в работе", "завершена":
-		return true
-	}
-	return false
 }
