@@ -27,6 +27,7 @@ menu:
 		fmt.Println("4 - Добавить задачу")
 		fmt.Println("5 - Изменить статус задачи")
 		fmt.Println("6 - Удалить задачу")
+		fmt.Println("7 - Показать задачу по ID")
 
 		fmt.Print("Выберите пункт: ")
 		if !scanner.Scan() {
@@ -72,6 +73,25 @@ menu:
 				fmt.Println("Ошибка:", err) // например, "задача не найдена"
 			} else {
 				fmt.Println("Задача успешно удалена!")
+			}
+		case "7":
+			fmt.Print("Введите ID задачи: ")
+			if !scanner.Scan() {
+				break menu
+			}
+			idStr := scanner.Text()
+
+			id, err := strconv.Atoi(idStr)
+			if err != nil {
+				fmt.Println("Ошибка: ID должен быть числом")
+				break
+			}
+
+			t, err := store.GetByID(id)
+			if err != nil {
+				fmt.Println("Ошибка:", err) // Выведет "задача не найдена", если ее нет
+			} else {
+				fmt.Println(t) // Выведет красивую строку задачи
 			}
 
 		default:

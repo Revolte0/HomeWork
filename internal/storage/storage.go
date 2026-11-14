@@ -68,3 +68,11 @@ func (s *MemoryStorage) FilterByStatus(status task.Status) []*task.Task {
 	}
 	return result
 }
+
+func (s *MemoryStorage) Update(t *task.Task) error {
+	if _, exists := s.byID[t.ID()]; !exists {
+		return ErrNotFound
+	}
+	s.byID[t.ID()] = t
+	return nil
+}
