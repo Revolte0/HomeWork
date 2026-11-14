@@ -70,7 +70,7 @@ menu:
 			}
 			err = store.Delete(id)
 			if err != nil {
-				fmt.Println("Ошибка:", err) // например, "задача не найдена"
+				fmt.Println("Ошибка:", err)
 			} else {
 				fmt.Println("Задача успешно удалена!")
 			}
@@ -89,9 +89,9 @@ menu:
 
 			t, err := store.GetByID(id)
 			if err != nil {
-				fmt.Println("Ошибка:", err) // Выведет "задача не найдена", если ее нет
+				fmt.Println("Ошибка:", err)
 			} else {
-				fmt.Println(t) // Выведет красивую строку задачи
+				fmt.Println(t)
 			}
 
 		default:
